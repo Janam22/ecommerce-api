@@ -8,14 +8,15 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 
 class RegisterController extends BaseController
 {
         // Register API
         public function register(Request $request): JsonResponse {
             $validator = Validator::make($request->all(), [
-                'name' => 'required',
-                'email' => 'required|email',
+                'name' => 'required|string',
+                'email' => 'required|string|email|unique:users',
                 'password' => 'required',
                 'c_password' => 'required|same:password',
             ]);
@@ -24,18 +25,22 @@ class RegisterController extends BaseController
                 return $this->sendError('Validation Error.', $validator->errors());
             }
     
-    try {
-            $input = $request->all();
-            $input['password'] = bcrypt($input['password']);
-            $user = User::create($input);
-            $success['token'] = $user -> createToken('MyApp') -> plainTextToken;
-            $success['name'] = $user->name;
-    
-            return $this->sendResponse($success, 'User register successfully.');
-    } catch (Exception $e) {
-        return $this->sendError('An error occurred while registering to the system.', $e->getMessage());
-    }
-    }
+            try {
+
+                $input = $request->all();
+                $input['password'] = bcrypt($input['password']);
+                $user = User::create($input);
+                $remember_token = $user -> createToken('MyApp') -> plainTextToken;
+                $user->remember_token = $remember_token;
+                $user->save();
+                $success['token'] = $remember_token;
+                $success['name'] = $user->name;
+
+                return $this->sendResponse($success, 'User register successfully.');
+            } catch (Exception $e) {
+                return $this->sendError('An error occurred while registering to the system.', $e->getMessage());
+            }
+        }
 
     public function login(Request $request): JsonResponse {
         try {
