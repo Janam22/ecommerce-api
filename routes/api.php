@@ -13,7 +13,7 @@ Route::post('login', [RegisterController::class, 'login']);
 Route::post('register', [RegisterController::class, 'register']);
 
 // Apply Basic Auth middleware to specific routes
-Route::middleware('basicauth')->group(function () {
+Route::middleware('adminauth')->group(function () {
 
     Route::apiResource('products', ProductController::class);
     Route::apiResource('categories', CategoryController::class);
